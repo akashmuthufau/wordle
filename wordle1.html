@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Wordle Clone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121213;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 30px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-gap: 5px;
+      margin-bottom: 20px;
+    }
+
+    .cell {
+      width: 60px;
+      height: 60px;
+      font-size: 32px;
+      text-transform: uppercase;
+      text-align: center;
+      line-height: 60px;
+      border: 2px solid #3a3a3c;
+      background-color: #121213;
+      color: white;
+    }
+
+    .cell.correct {
+      background-color: #538d4e;
+      border-color: #538d4e;
+    }
+
+    .cell.present {
+      background-color: #b59f3b;
+      border-color: #b59f3b;
+    }
+
+    .cell.absent {
+      background-color: #3a3a3c;
+      border-color: #3a3a3c;
+    }
+
+    input {
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 18px;
+      text-transform: uppercase;
+    }
+
+    #message {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Wordle Clone</h1>
+  <div id="board"></div>
+  <input type="text" id="guessInput" maxlength="5" autofocus placeholder="Enter 5-letter word" />
+  <div id="message"></div>
+
+  <script>
+    const targetWord = "PLANT";
+    const maxAttempts = 6;
+    let currentAttempt = 0;
+
+    const board = document.getElementById("board");
+    const input = document.getElementById("guessInput");
+    const message = document.getElementById("message");
+
+    // Initialize board
+    for (let i = 0; i < maxAttempts; i++) {
+      const row = document.createElement("div");
+      row.classList.add("grid");
+      for (let j = 0; j < 5; j++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        row.appendChild(cell);
+      }
+      board.appendChild(row);
+    }
+
+    function evaluateGuess(guess) {
+      const row = board.children[currentAttempt];
+      const letterCount = {};
+
+      // Count letters in target word
+      for (let char of targetWord) {
+        letterCount[char] = (letterCount[char] || 0) + 1;
+      }
+
+      const cells = row.children;
+      const result = Array(5).fill("absent");
+
+      // First pass: correct letters
+      for (let i = 0; i < 5; i++) {
+        if (guess[i] === targetWord[i]) {
+          result[i] = "correct";
+          letterCount[guess[i]]--;
+        }
+      }
+
+      // Second pass: present letters
+      for (let i = 0; i < 5; i++) {
+        if (result[i] === "correct") continue;
+        if (targetWord.includes(guess[i]) && letterCount[guess[i]] > 0) {
+          result[i] = "present";
+          letterCount[guess[i]]--;
+        }
+      }
+
+      // Render the row
+      for (let i = 0; i < 5; i++) {
+        cells[i].textContent = guess[i];
+        cells[i].classList.add(result[i]);
+      }
+
+      if (guess === targetWord) {
+        message.textContent = "🎉 Correct! You win!";
+        input.disabled = true;
+      } else if (currentAttempt === maxAttempts - 1) {
+        message.textContent = `😢 Out of attempts. Word was "${targetWord}".`;
+        input.disabled = true;
+      }
+    }
+
+    input.addEventListener("keyup", function (e) {
+      if (e.key === "Enter") {
+        const guess = input.value.toUpperCase();
+        if (guess.length !== 5) {
+          alert("Please enter a 5-letter word.");
+          return;
+        }
+        evaluateGuess(guess);
+        currentAttempt++;
+        input.value = "";
+      }
+    });
+  </script>
+</body>
+</html>
